@@ -26,7 +26,7 @@ class Node {
             && this.right.compare(node)) {
             this.right = null;
             node.parent = null;
-        } else throw new Error("I don't have such child");
+        } else throw new Error("I don't have such child.");
     }
 
     remove() {
@@ -44,11 +44,9 @@ class Node {
                 grandChildRight = this.right;
 
             let brotherRight, brotherLeft;
-            if (parent.left
-                && parent.left.compare(child)) {
+            if (parent.left && parent.left.compare(child)) {
                 brotherRight = parent.right;
-            } else if (parent.right
-                && parent.right.compare(child)) {
+            } else if (parent.right && parent.right.compare(child)) {
                 brotherLeft = parent.left;
             }
 
@@ -57,6 +55,7 @@ class Node {
             if (brotherRight) {
                 parent.removeChild(brotherRight);
             }
+
             if (brotherLeft) {
                 parent.removeChild(brotherLeft);
             }

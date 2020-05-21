@@ -1,175 +1,180 @@
 const Node = require('./node');
 
 class MaxHeap {
-	constructor() {
-		this.root = null;
-		this.parentNodes = [];
-		this.acc = 0;
-	}
+    constructor() {
+        this.root = null;
+        this.parentNodes = [];
+        this.counter = 0;
+    }
 
-	push(data, priority) {
-		let node = new Node(data, priority);
-		this.insertNode(node);
-		this.shiftNodeUp(node);
-	}
+    push(data, priority) {
+        let node = new Node(data, priority);
+        this.insertNode(node);
+        this.shiftNodeUp(node);
+    }
 
-	insertNode(node) {
-		if (this.root === null) {
-			this.root = node;
-			this.parentNodes.push(node);
-		} else {
-			this.parentNodes[0].appendChild(node);
-			this.parentNodes.push(node);
+    insertNode(node) {
+        if (this.root === null) {
+            this.root = node;
+            this.parentNodes.push(node);
+        } else {
+            this.parentNodes[0].appendChild(node);
+            this.parentNodes.push(node);
 
-			if (this.parentNodes[0].left
-				&& this.parentNodes[0].right) {
-				this.parentNodes.shift();
-			}
-		}
+            if (this.parentNodes[0].left
+                && this.parentNodes[0].right) {
+                this.parentNodes.shift();
+            }
+        }
 
-		this.acc += 1;
-	}
+        this.counter += 1;
+    }
 
-	shiftNodeUp(node) {
-		if (node.parent
-			&& node.priority > node.parent.priority) {
-			const indexOfNode = this.parentNodes.findIndex(item => item.compare(node));
-			const indexOfParentNode = this.parentNodes.findIndex(item => item.compare(node.parent));
+    shiftNodeUp(node) {
+        const parentNode = node.parent;
 
-			if (indexOfNode >= 0
-				&& indexOfParentNode >= 0) {
-					this.parentNodes.splice(indexOfNode, 1, node.parent);
-					this.parentNodes.splice(indexOfParentNode, 1, node);
-			} else if (indexOfNode >= 0
-				&& indexOfParentNode < 0) {
-					this.parentNodes.splice(indexOfNode, 1, node.parent);
-			}
+        if (!parentNode || node.priority <= parentNode.priority) {
+            return;
+        }
 
-			if (this.root.compare(node.parent)) {
-				this.root = node;
-			}
+        const indexOfNode = this.parentNodes.findIndex(item => item.compare(node));
+        const indexOfParentNode = this.parentNodes.findIndex(item => item.compare(parentNode));
 
-			node.swapWithParent();
+        if (indexOfNode >= 0 && indexOfParentNode >= 0) {
+            this.parentNodes.splice(indexOfNode, 1, parentNode);
+            this.parentNodes.splice(indexOfParentNode, 1, node);
+        } else if (indexOfNode >= 0 && indexOfParentNode < 0) {
+            this.parentNodes.splice(indexOfNode, 1, parentNode);
+        }
 
-			return this.shiftNodeUp(node);
-		}
-	}
+        if (this.root.compare(parentNode)) {
+            this.root = node;
+        }
 
-	pop() {
-		if (this.root) {
-			const detached = this.detachRoot();
-			const newRoot = this.restoreRootFromLastInsertedNode(detached);
-			this.shiftNodeDown(newRoot);
+        node.swapWithParent();
 
-			return detached ? detached.data : null;
-		}
-	}
+        return this.shiftNodeUp(node);
+    }
 
-	detachRoot() {
-		if (this.root) {
-			let detached = this.root,
-				indexOfRoot = this.parentNodes.findIndex(item => item.compare(this.root));
+    pop() {
+        if (this.isEmpty()) {
+            return;
+        }
 
-			if (indexOfRoot >= 0) {
-				this.parentNodes.splice(indexOfRoot, 1);
-			}
+        const detached = this.detachRoot();
+        const newRoot = this.restoreRootFromLastInsertedNode(detached);
+        this.shiftNodeDown(newRoot);
 
-			this.root = null;
-			this.acc -= 1;
+        return detached ? detached.data : null;
+    }
 
-			return detached;
-		}
-	}
+    detachRoot() {
+        if (this.isEmpty()) {
+            return;
+        }
 
-	restoreRootFromLastInsertedNode(detached) {
-		const lastInsertedNode = this.parentNodes[this.parentNodes.length - 1];
+        const detached = this.root,
+            indexOfRoot = this.parentNodes.findIndex(item => item.compare(this.root));
 
-		if (lastInsertedNode) {
-			const lastInsertedNodeParent = lastInsertedNode.parent;
+        if (indexOfRoot >= 0) {
+            this.parentNodes.splice(indexOfRoot, 1);
+        }
 
-			lastInsertedNode.remove();
-			this.root = lastInsertedNode;
+        this.root = null;
+        this.counter -= 1;
 
-			const leftDetachedChild = detached.left,
-				rightDetachedChild = detached.right;
+        return detached;
+    }
 
-			if (leftDetachedChild) {
-				detached.removeChild(leftDetachedChild);
-				lastInsertedNode.appendChild(leftDetachedChild);
-			}
+    restoreRootFromLastInsertedNode(detached) {
+        const lastInsertedNode = this.parentNodes[this.parentNodes.length - 1];
 
-			if (rightDetachedChild) {
-				detached.removeChild(rightDetachedChild);
-				lastInsertedNode.appendChild(rightDetachedChild);
-			}
+        if (!lastInsertedNode) {
+            return;
+        }
 
-			if (rightDetachedChild) {
-				const indexOfLastInsertedNode = this.parentNodes.findIndex(item => item.compare(lastInsertedNode));
-				this.parentNodes.splice(indexOfLastInsertedNode, 1);
+        const lastInsertedNodeParent = lastInsertedNode.parent;
 
-				if (lastInsertedNodeParent.left == null
-					|| lastInsertedNodeParent.right == null) {
-					this.parentNodes.unshift(lastInsertedNodeParent);
-				}
-			} else {
-				this.parentNodes[0] = lastInsertedNode;
-				this.parentNodes[1] = leftDetachedChild;
-			}
-		}
+        lastInsertedNode.remove();
+        this.root = lastInsertedNode;
 
-		return lastInsertedNode;
-	}
+        const leftDetachedChild = detached.left,
+            rightDetachedChild = detached.right;
 
-	size() {
-		return this.acc;
-	}
+        if (leftDetachedChild) {
+            detached.removeChild(leftDetachedChild);
+            lastInsertedNode.appendChild(leftDetachedChild);
+        }
 
-	isEmpty() {
-		return !this.root;
-	}
+        if (rightDetachedChild) {
+            detached.removeChild(rightDetachedChild);
+            lastInsertedNode.appendChild(rightDetachedChild);
+        }
 
-	clear() {
-		this.root = null;
-		this.parentNodes = [];
-		this.acc = 0;
-	}
+        if (rightDetachedChild) {
+            const indexOfLastInsertedNode = this.parentNodes.findIndex(item => item.compare(lastInsertedNode));
+            this.parentNodes.splice(indexOfLastInsertedNode, 1);
 
-	shiftNodeDown(node) {
-		if (node && (node.left || node.right)) {
-			const indexOfNode = this.parentNodes.findIndex(item => item.compare(node));
-			let shiftedNode;
+            if (!(lastInsertedNodeParent.left && lastInsertedNodeParent.right)) {
+                this.parentNodes.unshift(lastInsertedNodeParent);
+            }
+        } else {
+            this.parentNodes[0] = lastInsertedNode;
+            this.parentNodes[1] = leftDetachedChild;
+        }
 
-			if (node.left && node.right) {
-				shiftedNode = node.left.priority > node.right.priority
-					? node.left
-					: node.right;
-			} else if (node.left) {
-				shiftedNode = node.left;
-			} else shiftedNode = node.right;
+        return lastInsertedNode;
+    }
 
-			if (shiftedNode.priority > node.priority) {
-				const indexOfShiftedNode = this.parentNodes.findIndex(item => item.compare(shiftedNode));
+    size() {
+        return this.counter;
+    }
 
-				if (indexOfNode >= 0
-					&& indexOfShiftedNode >= 0) {
-					this.parentNodes.splice(indexOfNode, 1, shiftedNode);
-					this.parentNodes.splice(indexOfShiftedNode, 1, node);
-				} else if (indexOfNode < 0
-					&& indexOfShiftedNode >= 0) {
-					this.parentNodes.splice(indexOfShiftedNode, 1, node);
-				}
+    isEmpty() {
+        return !this.root;
+    }
 
-				if (this.root.compare(node)) {
-					this.root = shiftedNode;
-				}
+    clear() {
+        this.root = null;
+        this.parentNodes = [];
+        this.counter = 0;
+    }
 
-				shiftedNode.swapWithParent();
+    shiftNodeDown(node) {
+        if (!node || !(node.left || node.right)) {
+            return;
+        }
 
-				return this.shiftNodeDown(node);
-			}
-		}
+        const indexOfNode = this.parentNodes.findIndex(item => item.compare(node));
+        let shiftedNode;
 
-	}
+        if (node.left && node.right) {
+            shiftedNode = node.left.priority > node.right.priority ? node.left : node.right;
+        } else if (node.left) {
+            shiftedNode = node.left;
+        } else shiftedNode = node.right;
+
+        if (node.priority >= shiftedNode.priority) {
+            return;
+        }
+
+        const indexOfShiftedNode = this.parentNodes.findIndex(item => item.compare(shiftedNode));
+
+        if (indexOfNode >= 0 && indexOfShiftedNode >= 0) {
+            this.parentNodes.splice(indexOfNode, 1, shiftedNode);
+            this.parentNodes.splice(indexOfShiftedNode, 1, node);
+        } else if (indexOfNode < 0 && indexOfShiftedNode >= 0) {
+            this.parentNodes.splice(indexOfShiftedNode, 1, node);
+        }
+
+        if (this.root.compare(node)) {
+            this.root = shiftedNode;
+        }
+
+        shiftedNode.swapWithParent();
+
+        return this.shiftNodeDown(node);
+    }
 }
 
 module.exports = MaxHeap;
