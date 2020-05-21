@@ -4,6 +4,7 @@ class MaxHeap {
 	constructor() {
 		this.root = null;
 		this.parentNodes = [];
+		this.acc = 0;
 	}
 
 	push(data, priority) {
@@ -25,6 +26,8 @@ class MaxHeap {
 				this.parentNodes.shift();
 			}
 		}
+
+		this.acc += 1;
 	}
 
 	shiftNodeUp(node) {
@@ -72,6 +75,7 @@ class MaxHeap {
 			}
 
 			this.root = null;
+			this.acc -= 1;
 
 			return detached;
 		}
@@ -113,21 +117,21 @@ class MaxHeap {
 			}
 		}
 
-
 		return lastInsertedNode;
 	}
 
 	size() {
-		
+		return this.acc;
 	}
 
 	isEmpty() {
-		
+		return !this.root;
 	}
 
 	clear() {
 		this.root = null;
 		this.parentNodes = [];
+		this.acc = 0;
 	}
 
 	shiftNodeDown(node) {
